@@ -1,0 +1,8 @@
+{
+  "name": "hello-test",
+  "description": "A minimal plugin for testing profile isolation",
+  "version": "1.0.0",
+  "author": {
+    "name": "Test"
+  }
+}

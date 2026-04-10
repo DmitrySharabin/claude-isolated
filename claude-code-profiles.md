@@ -106,40 +106,22 @@ rm -rf ~/claude-profiles/experiment-1
 
 To confirm that a profile is truly isolated from your global config, create a profile with distinctive settings and check that none of your global configuration leaks through.
 
-### 1. Create test files
+### 1. Copy the test profile
+
+The repo includes a ready-made `guided/` profile with a `CLAUDE.md` and `settings.json`. Copy it into your profiles directory:
 
 ```bash
-mkdir -p ~/claude-profiles/guided
-
-cat > ~/claude-profiles/guided/CLAUDE.md << 'EOF'
-# Guided Profile
-
-You are in the **guided** isolated environment.
-
-When greeted or asked "who are you", always respond with:
-"I am running in the GUIDED isolated environment. No global settings are loaded."
-
-Always end every response with the line:
-`[guided profile active]`
-EOF
-
-cat > ~/claude-profiles/guided/settings.json << 'EOF'
-{
-  "permissions": {
-    "allow": [
-      "Bash(echo:*)",
-      "Bash(cat:*)",
-      "Bash(ls:*)"
-    ],
-    "deny": [
-      "Bash(git:*)"
-    ]
-  },
-  "enabledPlugins": {},
-  "effortLevel": "low"
-}
-EOF
+cp -r guided ~/claude-profiles/guided
 ```
+
+<details>
+<summary>What's inside</summary>
+
+**`guided/CLAUDE.md`** — instructs Claude to identify itself as running in the guided profile and append `[guided profile active]` to every response.
+
+**`guided/settings.json`** — allows only `echo`, `cat`, and `ls`; denies `git`; sets `effortLevel` to `low`.
+
+</details>
 
 ### 2. Launch the profile
 
@@ -166,48 +148,27 @@ Open another terminal in the same directory and run plain `claude` (no profile).
 
 To test a plugin in an isolated profile, create a minimal plugin and load it with `--plugin-dir`.
 
-### 1. Create the plugin
+### 1. Copy the test plugin
+
+The repo includes a ready-made `hello-test/` plugin. Copy it to a working location:
 
 ```bash
-mkdir -p ~/my-plugins/hello-test/.claude-plugin ~/my-plugins/hello-test/skills/greet
-
-cat > ~/my-plugins/hello-test/.claude-plugin/plugin.json << 'EOF'
-{
-  "name": "hello-test",
-  "description": "A minimal plugin for testing profile isolation",
-  "version": "1.0.0",
-  "author": {
-    "name": "Test"
-  }
-}
-EOF
-
-cat > ~/my-plugins/hello-test/skills/greet/SKILL.md << 'EOF'
----
-description: Say hello from the test plugin. Use when the user types /hello-test:greet.
-disable-model-invocation: true
----
-
-# Greet Skill
-
-Respond with exactly:
-
-"Hello from the hello-test plugin! Profile isolation is working correctly."
-
-Then list the current date and time.
-EOF
+cp -r hello-test ~/my-plugins/hello-test
 ```
 
-This creates:
+<details>
+<summary>What's inside</summary>
 
 ```
-~/my-plugins/hello-test/
+hello-test/
   .claude-plugin/
-    plugin.json
+    plugin.json        # Plugin metadata (name, version, description)
   skills/
     greet/
-      SKILL.md
+      SKILL.md         # Skill that responds with a greeting confirming isolation works
 ```
+
+</details>
 
 ### 2. Launch with the plugin
 

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)"
+    ],
+    "deny": [
+      "Bash(git:*)"
+    ]
+  },
+  "enabledPlugins": {},
+  "effortLevel": "low"
+}
