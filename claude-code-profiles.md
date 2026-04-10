@@ -108,18 +108,18 @@ To confirm that a profile is truly isolated from your global config, create a pr
 
 ### 1. Copy the test profile
 
-The repo includes a ready-made `guided/` profile with a `CLAUDE.md` and `settings.json`. Copy it into your profiles directory:
+The repo includes a ready-made `sandbox/` profile with a `CLAUDE.md` and `settings.json`. Copy it into your profiles directory:
 
 ```bash
-cp -r guided ~/claude-profiles/guided
+cp -r sandbox ~/claude-profiles/sandbox
 ```
 
 <details>
 <summary>What's inside</summary>
 
-**`guided/CLAUDE.md`** — instructs Claude to identify itself as running in the guided profile and append `[guided profile active]` to every response.
+**`sandbox/CLAUDE.md`** — instructs Claude to identify itself as running in the sandbox profile and append `[sandbox profile active]` to every response.
 
-**`guided/settings.json`** — allows only `echo`, `cat`, and `ls`; denies `git`; sets `effortLevel` to `low`.
+**`sandbox/settings.json`** — allows only `echo`, `cat`, and `ls`; denies `git`; sets `effortLevel` to `low`.
 
 </details>
 
@@ -127,14 +127,14 @@ cp -r guided ~/claude-profiles/guided
 
 ```bash
 cd /path/to/your/project
-claude-profile guided
+claude-profile sandbox
 ```
 
 ### 3. Run these checks inside the session
 
 | What to do | Expected (isolated) | If isolation failed |
 |---|---|---|
-| Type `who are you` | Responds with "GUIDED isolated environment" and ends with `[guided profile active]` | Normal response, no tag |
+| Type `who are you` | Responds with "SANDBOX isolated environment" and ends with `[sandbox profile active]` | Normal response, no tag |
 | `/plugins` | "No plugins or MCP servers installed." | Shows your installed plugins |
 | `/effort` | Shows `low` | Shows `medium` (or your global value) |
 | `/memory` | No auto memory files, or only the profile's CLAUDE.md | Shows memory from your previous sessions |
@@ -142,7 +142,7 @@ claude-profile guided
 
 ### 4. Compare with your normal setup
 
-Open another terminal in the same directory and run plain `claude` (no profile). The same checks should show your plugins, no `[guided profile active]` tag, `git status` running without prompting, and your normal `effortLevel`.
+Open another terminal in the same directory and run plain `claude` (no profile). The same checks should show your plugins, no `[sandbox profile active]` tag, `git status` running without prompting, and your normal `effortLevel`.
 
 ## Testing a Local Plugin
 
@@ -174,7 +174,7 @@ hello-test/
 
 ```bash
 cd /path/to/your/project
-claude-profile guided ~/my-plugins/hello-test
+claude-profile sandbox ~/my-plugins/hello-test
 ```
 
 ### 3. Verify
@@ -237,7 +237,7 @@ Each profile has its own directory, so you can run multiple profiles simultaneou
 
 ```
 ~/claude-profiles/
-  guided/                       # Profile with test settings
+  sandbox/                      # Profile with test settings
     .claude.json
     settings.json
     plugins/

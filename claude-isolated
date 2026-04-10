@@ -12,10 +12,10 @@ set -e
 #   claude-isolated --build
 #
 # Examples:
-#   claude-isolated guided --plugin-dir ~/Developer/claude-plugin
+#   claude-isolated sandbox --plugin-dir ~/projects/claude-plugin
 #   claude-isolated clean
-#   claude-isolated test --plugin-dir ~/Developer/claude-plugin --workspace ~/projects/myapp
-#   claude-isolated guided -- --model sonnet
+#   claude-isolated test --plugin-dir ~/projects/claude-plugin --workspace ~/projects/myapp
+#   claude-isolated sandbox -- --model sonnet
 # ─────────────────────────────────────────────────────────
 
 IMAGE_NAME="claude-isolated"
@@ -37,7 +37,7 @@ Options:
   --help                Show this help
 
 Examples:
-  claude-isolated guided --plugin-dir ~/Developer/claude-plugin
+  claude-isolated sandbox --plugin-dir ~/projects/claude-plugin
   claude-isolated clean
   claude-isolated test --workspace ~/projects/myapp -- --model opus
 EOF
