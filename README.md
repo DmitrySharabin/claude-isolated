@@ -108,6 +108,10 @@ This is a live volume mount, not a copy. Any file you add, edit, or remove in `~
 | `claude-isolated` | Launcher script with profile management |
 | `.dockerignore` | Keeps image builds clean |
 
+## Lightweight Alternative (No Docker)
+
+If you don't need full container isolation, you can achieve profile switching using the `CLAUDE_CONFIG_DIR` environment variable and a shell function — no Docker required. See [claude-code-profiles.md](claude-code-profiles.md) for setup instructions, verification steps, and trade-offs between the two approaches.
+
 ## Limitations
 
 - First run per profile requires browser-based login
