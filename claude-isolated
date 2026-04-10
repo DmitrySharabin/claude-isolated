@@ -1,0 +1,199 @@
+#!/bin/bash
+set -e
+
+# ─────────────────────────────────────────────────────────
+# claude-isolated: Run Claude Code in a Docker container
+# with full plugin/config isolation from your host ~/.claude
+#
+# Usage:
+#   claude-isolated <profile> [--plugin-dir <path>] [--workspace <path>] [-- <claude args>]
+#   claude-isolated --list
+#   claude-isolated --delete <profile>
+#   claude-isolated --build
+#
+# Examples:
+#   claude-isolated guided --plugin-dir ~/Developer/claude-plugin
+#   claude-isolated clean
+#   claude-isolated test --plugin-dir ~/Developer/claude-plugin --workspace ~/projects/myapp
+#   claude-isolated guided -- --model sonnet
+# ─────────────────────────────────────────────────────────
+
+IMAGE_NAME="claude-isolated"
+PROFILES_DIR="${CLAUDE_ISOLATED_PROFILES_DIR:-$HOME/.claude-profiles}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# ── Helpers ──────────────────────────────────────────────
+
+usage() {
+    cat <<EOF
+Usage: claude-isolated <profile> [options] [-- <claude args>]
+
+Options:
+  --plugin-dir <path>   Mount a local plugin directory (repeatable)
+  --workspace <path>    Mount a workspace directory as /home/claude/workspace
+  --list                List existing profiles
+  --delete <profile>    Delete a profile's persistent data
+  --build               Rebuild the Docker image
+  --help                Show this help
+
+Examples:
+  claude-isolated guided --plugin-dir ~/Developer/claude-plugin
+  claude-isolated clean
+  claude-isolated test --workspace ~/projects/myapp -- --model opus
+EOF
+    exit 0
+}
+
+ensure_image() {
+    if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
+        echo "Building $IMAGE_NAME image..."
+        build_image
+    fi
+}
+
+build_image() {
+    docker build -t "$IMAGE_NAME" "$SCRIPT_DIR"
+}
+
+# ── Command handlers ─────────────────────────────────────
+
+cmd_list() {
+    if [ ! -d "$PROFILES_DIR" ]; then
+        echo "No profiles yet."
+        exit 0
+    fi
+    echo "Profiles in $PROFILES_DIR:"
+    for d in "$PROFILES_DIR"/*/; do
+        [ -d "$d" ] || continue
+        name=$(basename "$d")
+        size=$(du -sh "$d" 2>/dev/null | cut -f1)
+        echo "  $name  ($size)"
+    done
+}
+
+cmd_delete() {
+    local profile="$1"
+    local profile_dir="$PROFILES_DIR/$profile"
+    if [ ! -d "$profile_dir" ]; then
+        echo "Profile '$profile' does not exist."
+        exit 1
+    fi
+    read -rp "Delete profile '$profile' and all its data? [y/N] " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        rm -rf "$profile_dir"
+        echo "Deleted."
+    else
+        echo "Cancelled."
+    fi
+}
+
+cmd_run() {
+    local profile="$1"
+    shift
+
+    local plugin_dirs=()
+    local workspace=""
+    local claude_args=()
+    local parsing_claude_args=false
+
+    while [ $# -gt 0 ]; do
+        if $parsing_claude_args; then
+            claude_args+=("$1")
+            shift
+            continue
+        fi
+        case "$1" in
+            --)
+                parsing_claude_args=true
+                shift
+                ;;
+            --plugin-dir)
+                plugin_dirs+=("$2")
+                shift 2
+                ;;
+            --workspace)
+                workspace="$2"
+                shift 2
+                ;;
+            *)
+                echo "Unknown option: $1"
+                usage
+                ;;
+        esac
+    done
+
+    # Ensure profile dir exists
+    local profile_dir="$PROFILES_DIR/$profile"
+    mkdir -p "$profile_dir"
+
+    # Build docker run args
+    local docker_args=(
+        --rm -it
+        --name "claude-$profile"
+        # Profile data (persistent — auth tokens saved here after first login)
+        -v "$profile_dir:/home/claude/.claude"
+    )
+
+    # Mount plugin dirs
+    local plugin_counter=0
+    for pdir in "${plugin_dirs[@]}"; do
+        local abs_pdir
+        abs_pdir="$(cd "$pdir" && pwd)"
+        if [ "$plugin_counter" -eq 0 ]; then
+            # First plugin goes to the auto-detected path
+            docker_args+=(-v "$abs_pdir:/home/claude/plugin")
+        else
+            # Additional plugins get numbered mounts
+            docker_args+=(-v "$abs_pdir:/home/claude/plugin-$plugin_counter")
+        fi
+        local mount_suffix=""
+        if [ "$plugin_counter" -gt 0 ]; then
+            mount_suffix="-$plugin_counter"
+        fi
+        claude_args+=(--plugin-dir "/home/claude/plugin$mount_suffix")
+        plugin_counter=$((plugin_counter + 1))
+    done
+
+    # Mount workspace
+    if [ -n "$workspace" ]; then
+        local abs_workspace
+        abs_workspace="$(cd "$workspace" && pwd)"
+        docker_args+=(-v "$abs_workspace:/home/claude/workspace")
+        docker_args+=(-w /home/claude/workspace)
+    fi
+
+    ensure_image
+
+    echo "Profile:   $profile"
+    echo "Data dir:  $profile_dir"
+    [ ${#plugin_dirs[@]} -gt 0 ] && echo "Plugins:   ${plugin_dirs[*]}"
+    [ -n "$workspace" ] && echo "Workspace: $workspace"
+    echo "───────────────────────────────────────"
+
+    docker run "${docker_args[@]}" "$IMAGE_NAME" "${claude_args[@]}"
+}
+
+# ── Main ─────────────────────────────────────────────────
+
+case "${1:-}" in
+    --help|-h|"")
+        usage
+        ;;
+    --list)
+        cmd_list
+        ;;
+    --delete)
+        cmd_delete "$2"
+        ;;
+    --build)
+        build_image
+        echo "Image built."
+        ;;
+    --*)
+        echo "Unknown command: $1"
+        usage
+        ;;
+    *)
+        cmd_run "$@"
+        ;;
+esac
