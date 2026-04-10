@@ -212,6 +212,16 @@ Project-level config (`.claude/settings.json`, `.claude/settings.local.json`, `.
 
 If the project you're working in has its own `.claude/settings.json` with plugins or permissions, those will still load.
 
+Here's the full picture of what lives where:
+
+| Scope | File | Location | Controlled by `CLAUDE_CONFIG_DIR`? |
+|-------|------|----------|-------------------------------------|
+| User settings | `settings.json` | Profile directory | Yes |
+| User instructions | `CLAUDE.md` | Profile directory | Yes |
+| Project settings | `settings.json` | `your-project/.claude/` | No — follows the project |
+| Project local overrides | `settings.local.json` | `your-project/.claude/` | No — follows the project |
+| Project MCP servers | `.mcp.json` | `your-project/` | No — follows the project |
+
 ### Concurrent sessions
 
 Each profile has its own directory, so you can run multiple profiles simultaneously in different terminals without conflict.
