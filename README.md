@@ -2,6 +2,20 @@
 
 Run Claude Code in Docker with full plugin/config isolation from your host `~/.claude`. Each profile gets its own persistent state — sessions, settings, installed plugins — while sharing nothing with the host.
 
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [First run](#first-run)
+- [Usage](#usage)
+- [What's inside the container](#whats-inside-the-container)
+- [How it works](#how-it-works)
+- [Profile persistence](#profile-persistence)
+- [Editing profile settings from the host](#editing-profile-settings-from-the-host)
+- [Files](#files)
+- [Lightweight Alternative (No Docker)](#lightweight-alternative-no-docker)
+- [Limitations](#limitations)
+
 ## Prerequisites
 
 You need a Docker-compatible runtime. Either:
